@@ -1,9 +1,11 @@
-import { Button } from '@chakra-ui/react';
+import { Button, ButtonProps } from '@chakra-ui/react';
 import React from 'react';
 
-export function AddButton(){
+type Props = ButtonProps
+
+export function AddButton(props: ButtonProps){
   return (
-    <Button m="1" size="xs">
+    <Button m="1" size="xs" {...props}>
         +
     </Button>
   );

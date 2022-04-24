@@ -4,6 +4,7 @@ import { DragSourceMonitor, useDrag } from 'react-dnd';
 
 export type TodoData = {
     id: string
+    fatherID?: string;
     description: string
     checked: boolean
     todos: TodoData[]
@@ -12,13 +13,12 @@ export type TodoData = {
 type Props = {
     todo: TodoData
     primary?: boolean
-    fatherID?: string
 }
 
-function TodoItemComponent({ todo, primary = false, fatherID }: Props){
+function TodoItemComponent({ todo, primary = false }: Props){
     const [{ isDragging }, drag] = useDrag(() => ({
         type: 'todo',
-        item: {...todo, primary, fatherID},
+        item: {...todo, primary},
         canDrag: true,
         collect: (monitor: DragSourceMonitor) => ({
             isDragging: monitor.isDragging()
