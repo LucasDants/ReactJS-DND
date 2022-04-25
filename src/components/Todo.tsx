@@ -1,47 +1,60 @@
-import { Box, Button, Flex, SimpleGrid } from '@chakra-ui/react';
 import React, { memo, useState } from 'react';
-import { DropTargetMonitor, useDrop } from 'react-dnd';
-import { AddButton } from './AddButton';
-import { TodoData, TodoItem } from './TodoItem';
-import { v4 as uuidv4 } from 'uuid';
-import { doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore'
-import { db } from '../services/firebaseConfig';
 import { useRouter } from 'next/router';
-import { DeleteIcon } from '@chakra-ui/icons'
-import { PreviewTodoItem } from './PreviewTodoItem';
+
+import { Box, Flex, SimpleGrid } from '@chakra-ui/react';
+import { DropTargetMonitor, useDrop } from 'react-dnd';
+
+import { PreviewTask } from './PreviewTask';
+import { IconButton } from './IconButton';
+import { Task } from './Task';
+
+import { doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, runTransaction } from 'firebase/firestore'
+import { db } from '../services/firebaseConfig';
+import { v4 as uuidV4 } from 'uuid';
+
+import { TodoProps } from '../dtos/Todo';
+import { TaskProps } from '../dtos/Task';
 
 
 type Props = {
-    todo: TodoData
+    todo: TodoProps
 }
 
-type TodoItemData = TodoData & {
-  primary: boolean;
+type DroppableItem = TaskProps & {
+    tasks?: TaskProps[]
 }
 
-function TodoComponent({ todo }: Props) {
-  const router = useRouter()
-  const [addingNewTodo, setAddingNewTodo] = useState(false)
+export function Todo({ todo }: Props) {
+    const router = useRouter()
+    const { todoListID } = router.query
 
-  const { todoID } = router.query
+
+    const [addingNewTask, setAddingNewTask] = useState(false)
+
 
     const [{ isOver }, drop] = useDrop(() => ({
-        accept: 'todo',
-        drop(_item: TodoItemData, monitor) {
-            if(_item.primary && _item.todos.length) {
+        accept: ['todo', 'task'],
+        drop(_item: DroppableItem, _) {
+            if (_item.id === todo.id || (!_item.todoID && _item.tasks?.length)) {
+                console.log(_item)
                 return
-            } else if(_item.primary) {
-                const docRef = doc(db, `routes/${todoID}/todos/${_item.id}`)
+            } else if (!_item.todoID) {
+                const docRef = doc(db, `routes/${todoListID}/todos/${_item.id}`)
+
+                updateDoc(doc(db, `routes/${todoListID}/todos/${todo.id}`), {
+                    tasks: arrayUnion({ checked: _item.checked, description: _item.description, todoID: todo.id, id: _item.id })
+                })
+
                 deleteDoc(docRef)
-                updateDoc(doc(db, `routes/${todoID}/todos/${todo.id}`), {
-                    todos: arrayUnion({checked: _item.checked, description: _item.description, fatherID: todo.id, id: _item.id})
-                })
-            } else if(!_item.primary) {
-                updateDoc(doc(db, `routes/${todoID}/todos/${_item.fatherID}`), {
-                    todos: arrayRemove({checked: _item.checked, description: _item.description, fatherID: _item.fatherID, id: _item.id})
-                })
-                updateDoc(doc(db, `routes/${todoID}/todos/${todo.id}`), {
-                    todos: arrayUnion({checked: _item.checked, description: _item.description, fatherID: todo.id, id: _item.id})
+
+            } else if (_item.todoID) {
+                runTransaction(db, async transaction => {
+                    const oldTodoRef = doc(db, `routes/${todoListID}/todos/${_item.todoID}`)
+                    const newTodoRef = doc(db, `routes/${todoListID}/todos/${todo.id}`)
+
+                    transaction.update(oldTodoRef, { tasks: arrayRemove(_item) })
+                    transaction.update(newTodoRef, { tasks: arrayUnion({..._item, todoID: todo.id}) })
+
                 })
             }
 
@@ -53,45 +66,40 @@ function TodoComponent({ todo }: Props) {
         },
     }))
 
-
-    function handleAddTodo(description: string) {
-        if (!description) {
-            return
-        }
-        const docRef = doc(db, `routes/${todoID}/todos/${todo.id}`)
-        const newTodo = {
-            id: uuidv4(),
-            checked: false,
-            description,
-            fatherID: todo.id
-        }
-        setAddingNewTodo(false)
-        updateDoc(docRef, { todos: arrayUnion(newTodo) })
+    function handleDeleteTodo() {
+        const docRef = doc(db, `routes/${todoListID}/todos/${todo.id}`)
+        deleteDoc(docRef)
     }
 
+    function handleAddTask(description: string) {
+        const docRef = doc(db, `routes/${todoListID}/todos/${todo.id}`)
+        const newTask = {
+            id: uuidV4(),
+            checked: false,
+            description: description,
+            todoID: todo.id
+        }
+        updateDoc(docRef, { tasks: arrayUnion(newTask) })
+
+        setAddingNewTask(false)
+    }
 
     return (
-        <Box ref={drop}  border="1px solid" bg={isOver ? "orange.100" : 'blue.50'} borderRadius="4" p="4">
-            <TodoItem todo={todo} primary />
+        <Box ref={drop} border="1px solid" bg={isOver ? "orange.100" : 'blue.50'} borderRadius="4" p="4">
+            <Task task={todo} hasSubTasks={todo.tasks.length} />
             <SimpleGrid py="4" pl="8" columns={1} spacing="1">
                 {
-                    todo.todos.map(_todo => <TodoItem key={_todo.id} todo={_todo}/>)
+                    todo.tasks.map(task => <Task key={task.id} task={task} />)
                 }
                 {
-                    addingNewTodo &&  <PreviewTodoItem handleAddTodo={handleAddTodo} handleCancel={() => setAddingNewTodo(false)} />
+                    addingNewTask && <PreviewTask handleAddTask={handleAddTask} handleCancel={() => setAddingNewTask(false)} />
                 }
             </SimpleGrid>
             <Flex justifyContent="flex-end">
-                <AddButton onClick={() => setAddingNewTodo(true)} />
-                <Button bg="transparent" onClick={() => {
-                    const docRef = doc(db, `routes/${todoID}/todos/${todo.id}`)
-                    deleteDoc(docRef)
-                }}>
-                    <DeleteIcon />
-                </Button>
+                <IconButton iconType="add" onClick={() => setAddingNewTask(true)} />
+                <IconButton iconType="delete" onClick={handleDeleteTodo} />
             </Flex>
         </Box>
     );
 }
 
-export const Todo = memo(TodoComponent)

@@ -1,21 +1,14 @@
-import { Button, Flex, Input } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon } from '@chakra-ui/icons'
 import React, { useState } from 'react';
 
-export type TodoData = {
-    id: string
-    fatherID?: string;
-    description: string
-    checked: boolean
-    todos: TodoData[]
-}
+import { Button, Flex, Input } from '@chakra-ui/react';
+import { AddIcon, DeleteIcon } from '@chakra-ui/icons'
 
 type Props = {
-    handleAddTodo: (description: string) => void
+    handleAddTask: (description: string) => void
     handleCancel: () => void
 }
 
-export function PreviewTodoItem({  handleAddTodo, handleCancel }: Props) {
+export function PreviewTask({  handleAddTask, handleCancel }: Props) {
     const [description, setDescription] = useState('')
 
     return (
@@ -35,9 +28,17 @@ export function PreviewTodoItem({  handleAddTodo, handleCancel }: Props) {
                 borderX="none"
                 borderRadius="none"
                 maxLength={120}
+                onKeyDown={(e) => {
+                    if(e.key === 'Enter') {
+                        handleAddTask(description)
+                    }
+                    if(e.key === 'Escape') {
+                        handleCancel()
+                    }
+                }}
                 onChange={(e) => setDescription(e.target.value)}
             />
-            <Button bg="transparent" onClick={() => handleAddTodo(description)}>
+            <Button bg="transparent" onClick={() => handleAddTask(description)}>
                 <AddIcon />
             </Button>
              <Button bg="transparent" onClick={handleCancel}>
