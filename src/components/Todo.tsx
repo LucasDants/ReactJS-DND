@@ -1,13 +1,15 @@
-import { Box, Checkbox, Flex, SimpleGrid } from '@chakra-ui/react';
-import React from 'react';
+import { Box, Button, Flex, SimpleGrid } from '@chakra-ui/react';
+import React, { memo, useState } from 'react';
 import { DropTargetMonitor, useDrop } from 'react-dnd';
 import { AddButton } from './AddButton';
 import { TodoData, TodoItem } from './TodoItem';
 import { v4 as uuidv4 } from 'uuid';
-import { addDoc, collection, doc, setDoc, onSnapshot, query, updateDoc, deleteDoc, arrayUnion, arrayRemove} from 'firebase/firestore'
+import { doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore'
 import { db } from '../services/firebaseConfig';
 import { useRouter } from 'next/router';
-import { Item } from 'framer-motion/types/components/Reorder/Item';
+import { DeleteIcon } from '@chakra-ui/icons'
+import { PreviewTodoItem } from './PreviewTodoItem';
+
 
 type Props = {
     todo: TodoData
@@ -17,8 +19,9 @@ type TodoItemData = TodoData & {
   primary: boolean;
 }
 
-export function Todo({ todo }: Props) {
+function TodoComponent({ todo }: Props) {
   const router = useRouter()
+  const [addingNewTodo, setAddingNewTodo] = useState(false)
 
   const { todoID } = router.query
 
@@ -34,7 +37,6 @@ export function Todo({ todo }: Props) {
                     todos: arrayUnion({checked: _item.checked, description: _item.description, fatherID: todo.id, id: _item.id})
                 })
             } else if(!_item.primary) {
-                console.log(_item.fatherID, todo.id)
                 updateDoc(doc(db, `routes/${todoID}/todos/${_item.fatherID}`), {
                     todos: arrayRemove({checked: _item.checked, description: _item.description, fatherID: _item.fatherID, id: _item.id})
                 })
@@ -51,21 +53,45 @@ export function Todo({ todo }: Props) {
         },
     }))
 
+
+    function handleAddTodo(description: string) {
+        if (!description) {
+            return
+        }
+        const docRef = doc(db, `routes/${todoID}/todos/${todo.id}`)
+        const newTodo = {
+            id: uuidv4(),
+            checked: false,
+            description,
+            fatherID: todo.id
+        }
+        setAddingNewTodo(false)
+        updateDoc(docRef, { todos: arrayUnion(newTodo) })
+    }
+
+
     return (
-        <Box ref={drop} bg="blue.50" border="1px solid" borderColor={isOver ? "orange" : 'blue.700'} borderRadius="4" p="4">
+        <Box ref={drop}  border="1px solid" bg={isOver ? "orange.100" : 'blue.50'} borderRadius="4" p="4">
             <TodoItem todo={todo} primary />
             <SimpleGrid py="4" pl="8" columns={1} spacing="1">
                 {
                     todo.todos.map(_todo => <TodoItem key={_todo.id} todo={_todo}/>)
                 }
+                {
+                    addingNewTodo &&  <PreviewTodoItem handleAddTodo={handleAddTodo} handleCancel={() => setAddingNewTodo(false)} />
+                }
             </SimpleGrid>
             <Flex justifyContent="flex-end">
-                <AddButton onClick={() => {
-                    updateDoc(doc(db, `routes/${todoID}/todos/${todo.id}`), {
-                    todos: arrayUnion({checked: true, description: 'subitem', fatherID: todo.id, id: uuidv4()})
-                })
-                }} />
+                <AddButton onClick={() => setAddingNewTodo(true)} />
+                <Button bg="transparent" onClick={() => {
+                    const docRef = doc(db, `routes/${todoID}/todos/${todo.id}`)
+                    deleteDoc(docRef)
+                }}>
+                    <DeleteIcon />
+                </Button>
             </Flex>
         </Box>
     );
 }
+
+export const Todo = memo(TodoComponent)
