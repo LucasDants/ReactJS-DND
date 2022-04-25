@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 
 import { Box, Flex, SimpleGrid } from '@chakra-ui/react';
@@ -15,7 +15,6 @@ import { v4 as uuidV4 } from 'uuid';
 import { TodoProps } from '../dtos/Todo';
 import { TaskProps } from '../dtos/Task';
 
-
 type Props = {
     todo: TodoProps
 }
@@ -28,15 +27,12 @@ export function Todo({ todo }: Props) {
     const router = useRouter()
     const { todoListID } = router.query
 
-
     const [addingNewTask, setAddingNewTask] = useState(false)
-
 
     const [{ isOver }, drop] = useDrop(() => ({
         accept: ['todo', 'task'],
         drop(_item: DroppableItem, _) {
             if (_item.id === todo.id || (!_item.todoID && _item.tasks?.length)) {
-                console.log(_item)
                 return
             } else if (!_item.todoID) {
                 const docRef = doc(db, `routes/${todoListID}/todos/${_item.id}`)

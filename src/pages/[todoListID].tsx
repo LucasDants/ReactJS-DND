@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
-import type { GetServerSideProps, NextPage } from 'next'
+import type { GetServerSideProps } from 'next'
 
-import { DropTargetMonitor, useDrop } from 'react-dnd'
+import { useDrop } from 'react-dnd'
 import { Flex, Heading, SimpleGrid } from '@chakra-ui/react'
 
 import { Todo } from '../components/Todo'
@@ -31,7 +30,6 @@ export default function Todos({ todoListID }: Props) {
       if (didDrop || !_item.todoID) {
         return
       }
-    console.log('dentro', todoListID)
       const docRef = doc(db, `routes/${todoListID}/todos/${_item.todoID}`)
 
       updateDoc(docRef, { tasks: arrayRemove(_item) })
@@ -90,7 +88,7 @@ export default function Todos({ todoListID }: Props) {
       <Flex as="header"
         justifyContent="space-between"
         alignItems="center"
-        bg="orange.400"
+        bg="orange"
         position="fixed"
         left={0}
         right={0}
@@ -99,16 +97,17 @@ export default function Todos({ todoListID }: Props) {
         px="24"
       >
         <Heading color="white">Todo List</Heading>
-         <IconButton iconType="add" onClick={handleAddTodo} color="white" size="lg" />
+        <IconButton iconType="add" onClick={handleAddTodo} color="white" size="lg" />
       </Flex>
       <SimpleGrid ref={drop} spacing="8" pb="10" bg="white" px="24" py="12" pt="28">
         {
           todos.map((todo) => <Todo key={todo.id} todo={todo} />)
         }
         {
-          addingNewTodo && (
-            <PreviewTodo handleAddTodo={addTodo} handleCancel={() => setAddingNewTodo(false)} />
-          )
+          addingNewTodo && <PreviewTodo handleAddTodo={addTodo} handleCancel={() => setAddingNewTodo(false)} />
+        }
+        {
+          todos.length === 0 && !addingNewTodo && <Heading textAlign="center" color="blue.600">Add some todos to organize your tasks!</Heading>
         }
       </SimpleGrid>
     </Flex>
