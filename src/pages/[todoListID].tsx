@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { GetServerSideProps } from 'next'
 
 import { useDrop } from 'react-dnd'
-import { Flex, Heading, SimpleGrid } from '@chakra-ui/react'
+import { Flex, Heading, Link as ChakraLink, SimpleGrid } from '@chakra-ui/react'
 
 import { Todo } from '../components/Todo'
 import { PreviewTodo } from '../components/PreviewTodo'
@@ -14,6 +14,7 @@ import { Unsubscribe } from '@firebase/util'
 
 import { TodoProps } from '../dtos/Todo'
 import { TaskProps } from '../dtos/Task'
+import Link from 'next/link'
 
 type Props = {
   todoListID: string
@@ -96,7 +97,11 @@ export default function Todos({ todoListID }: Props) {
         py="2"
         px="24"
       >
-        <Heading color="white">Todo List</Heading>
+        <Link href="/" passHref>
+          <ChakraLink>
+            <Heading color="white">Todo List</Heading>
+          </ChakraLink>
+        </Link>
         <IconButton iconType="add" onClick={handleAddTodo} color="white" size="lg" />
       </Flex>
       <SimpleGrid ref={drop} spacing="8" pb="10" bg="white" px="24" py="12" pt="28">

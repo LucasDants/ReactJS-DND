@@ -12,6 +12,7 @@ const Home: NextPage = () => {
         bg="orange"
         py="2"
         px="24"
+        minH="72px"
       >
         <Heading color="white">Todo List</Heading>
       </Flex>

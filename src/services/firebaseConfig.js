@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAg-4PoolwOruH3G4WjaiFsSRUUDT-q0zI",
-  authDomain: "todolist-vibbra.firebaseapp.com",
-  projectId: "todolist-vibbra",
-  storageBucket: "todolist-vibbra.appspot.com",
-  messagingSenderId: "984861247424",
-  appId: "1:984861247424:web:3f7bc0e35b21598fec6a25"
+  apiKey: process.env.NEXT_PUBLIC_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_APP_ID
 };
 
 // Initialize Firebase
