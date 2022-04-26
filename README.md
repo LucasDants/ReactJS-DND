@@ -1,3 +1,11 @@
+<p align="center">
+    <img  src="https://img.shields.io/github/package-json/dependency-version/LucasDants/ReactJS-DND/react">
+    <img  src="https://img.shields.io/github/package-json/dependency-version/LucasDants/ReactJS-DND/next">
+    <img  src="https://img.shields.io/github/package-json/dependency-version/LucasDants/ReactJS-DND/@chakra-ui/react">
+    <img  src="https://img.shields.io/github/package-json/dependency-version/LucasDants/ReactJS-DND/firebase">
+    <img  src="https://img.shields.io/github/package-json/dependency-version/LucasDants/ReactJS-DND/react-dnd">
+</p>
+
 ### Features
 
 - [x] Criar TODO List ao digitar algo após a url
